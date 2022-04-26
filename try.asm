@@ -87,6 +87,8 @@ huitu4:
         cmp cx,bx
         int 10h
         jne huitu4
+jmp1:   jmp step5
+jmp2:   jmp work
 
 step5:
         mov bx,[si+12]
@@ -143,7 +145,7 @@ up:
         mov ds:[si],ax
         ; push ax
         ; pop [si]
-        jmp work
+        jmp jmp2
 
 
 
