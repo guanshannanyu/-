@@ -4,25 +4,19 @@ data segment
 dw 0,0
 dw 200,200
 db 0001b
-mus_freg  dw 330,294,262,294,3 dup (330)     ;频率表
+
+data ends
+
+datanew segment
+     
+     mus_freg  dw 330,294,262,294,3 dup (330)     ;频率表
                dw 3 dup (294),330,392,392
                dw 330,294,262,294,4 dup (330)
                dw 294,294,330,294,262,-1
      mus_time  dw 6 dup (25),50                   ;节拍表
                dw 2 dup (25,25,50)
                dw 12 dup (25),100
-data ends
-
-; datanew segment
-     
-;      mus_freg  dw 330,294,262,294,3 dup (330)     ;频率表
-;                dw 3 dup (294),330,392,392
-;                dw 330,294,262,294,4 dup (330)
-;                dw 294,294,330,294,262,-1
-;      mus_time  dw 6 dup (25),50                   ;节拍表
-;                dw 2 dup (25,25,50)
-;                dw 12 dup (25),100
-; datanew ends
+datanew ends
 
 stack segment
 db 200 dup (0)
@@ -54,11 +48,13 @@ start:
         mov word ptr es:[9*4],offset int9
         mov es:[4*9+2],cs
         call wujiaoxin
-
+back:
         
     
-     ;address mus_freg, mus_time
-     ;call music
+        mov ax, datanew
+        mov ds, ax           
+        address mus_freg, mus_time
+        call music
 
         jmp start
 
@@ -137,8 +133,8 @@ huitu5:
         dec bx
         cmp bx,0
         jne huitu5
+        
 
-wujiaoxin endp
 
 
 int9:   
@@ -174,7 +170,8 @@ int9:
         cmp al,39h
         jz space
 
-        jmp work
+        ;ret     ;放音乐与画图的冲突
+        jmp back
         
 
 up:     
@@ -211,8 +208,92 @@ space:
 exit:     
      mov ah, 4cH
      int 21h
+     
+wujiaoxin endp
 
+;------------发声-------------
+gensound proc near
+;      push ax
+;      push bx
+;      push cx
+;      push dx
+;      push di
 
+     mov al, 0b6H
+     out 43h, al    ;初始化8253，用于产生频率所需方波
+
+     mov dx, 12h
+     mov ax, 348ch
+     div di         ;计算要产生的声音频率
+
+     out 42h, al    
+     mov al, ah
+     out 42h, al    ;将计算出的频率传到42端口，产生对应的方波
+
+     in al, 61h
+     mov ah, al
+     or al, 3       ;将PB0,PB1两位置1，发声音
+     out 61h, al
+
+     push ax
+     push bx
+     push cx
+     push dx
+     push di
+     call wujiaoxin
+back1:
+     pop di
+     pop dx
+     pop cx
+     pop bx
+     pop ax
+     
+wait1:
+     mov cx, 3314
+     call waitf
+delay1:
+     dec bx
+     jnz wait1
+
+     mov al, ah
+     out 61h, al
+
+;      pop di
+;      pop dx
+;      pop cx
+;      pop bx
+;      pop ax
+     ret 
+gensound endp
+
+;--------------------------
+waitf proc near
+      push ax
+waitf1:
+      in al,61h
+      and al,10h
+      cmp al,ah
+      je waitf1
+      mov ah,al
+      loop waitf1
+      pop ax
+      ret
+waitf endp
+;--------------发声调用函数----------------
+music proc near
+      xor ax, ax
+freg:
+      mov di, [si]
+      cmp di, 0FFFFH
+      je end_mus
+      mov bx, ds:[bp]
+      call gensound
+      add si, 2
+      add bp, 2
+      jmp freg
+end_mus:
+      ret
+music endp
 
 code ends
 end start
