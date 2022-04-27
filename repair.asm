@@ -3,6 +3,7 @@ assume cs:code
 data segment
 dw 0,0
 dw 200,200
+db 0001b
 data ends
 
 stack segment
@@ -29,15 +30,15 @@ start:
         mov es:[4*9+2],cs
 
 
-work:   mov al,12h
-        mov ah,0
+work:   mov al,12h      ;640*480 256的图形模式:  
+        mov ah,0        ;是用来设定显示模式的服务程序
         mov cx,ds:[4]
         mov bx,200
         mov dx,ds:[6]
         int 10h
 huitu:
-        mov al,1100b
-        mov ah,0ch
+        mov al,ds:[8]    ;设置颜色
+        mov ah,0ch      ;写入图像
         inc cx  
         int 10h              
         dec bx
@@ -47,7 +48,7 @@ huitu:
 step2:
         mov bx,145
 huitu2:
-        mov al,1100b
+        mov al,ds:[8] 
         mov ah,0ch
         dec cx
         inc dx
@@ -60,7 +61,7 @@ huitu2:
 step3:
         mov bx,50
 huitu3:
-        mov al,1100b
+        mov al,ds:[8] 
         mov ah,0ch
         inc cx
         dec dx
@@ -76,7 +77,7 @@ huitu3:
 step4:
         mov bx,50
 huitu4:
-        mov al,1100b
+        mov al,ds:[8] 
         mov ah,0ch
         inc cx
         inc dx
@@ -92,7 +93,7 @@ huitu4:
 step5:
         mov bx,145
 huitu5:
-        mov al,1100b
+        mov al,ds:[8] 
         mov ah,0ch
         dec cx
         dec dx       
@@ -113,7 +114,7 @@ int9:
         and bh,11111100b        ;开中断
         push bx
         popf
-        call dword ptr ds:[0]  ;调用原来的int 9获取键盘输入
+        call dword ptr ds:[0]  ;调用原来的int 9获取键盘输入,不然无法输入
 
         cmp al,48h
         je up
@@ -125,20 +126,11 @@ int9:
         cmp al,4dh
         jz right
 
-        jmp work
-        ;cmp al,4bh
-        ; jz left
-        ; cmp al,50h
-        ; jz down
-        ; cmp al,40h
-        ; jz right
+        cmp al,39h
+        jz space
 
-        ; pop es
-        ; pop bx
-        ; pop ax
-        ; jmp work
-        ; mov ax,4c00h
-        ; int 21h    ;若按其他建则重新开始
+        jmp work
+        
 
 up:     
               
@@ -163,6 +155,12 @@ right:
         mov cx,ds:[4]    
         add cx,5
         mov ds:[4],cx   
+        jmp work
+
+space:  
+        mov bx,ds:[8]
+        inc bx
+        mov ds:[8],bx
         jmp work
 
 code ends
