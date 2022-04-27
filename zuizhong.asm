@@ -4,6 +4,7 @@ data segment
 dw 0,0
 dw 200,200
 db 0001b
+
 data ends
 
 datanew segment
@@ -46,8 +47,20 @@ start:
 
         mov word ptr es:[9*4],offset int9
         mov es:[4*9+2],cs
+        address mus_freg, mus_time
+        call wujiaoxin
+        
+back:
+        
+        
+        mov ax, datanew
+        mov ds, ax           
+        
+        call music
 
+        jmp start
 
+wujiaoxin proc
 work:  
         mov ax,data
         mov ds,ax
@@ -122,16 +135,9 @@ huitu5:
         dec bx
         cmp bx,0
         jne huitu5
+        
 
 
-changge:
-
-        mov ax, datanew
-        mov ds, ax
-            
-        address mus_freg, mus_time
-        call music
-        ;jmp work
 
 int9:   
         push ax
@@ -166,7 +172,8 @@ int9:
         cmp al,39h
         jz space
 
-        jmp work
+        ;ret     ;放音乐与画图的冲突
+        jmp back
         
 
 up:     
@@ -203,14 +210,16 @@ space:
 exit:     
      mov ah, 4cH
      int 21h
+     
+wujiaoxin endp
 
 ;------------发声-------------
 gensound proc near
-     push ax
-     push bx
-     push cx
-     push dx
-     push di
+;      push ax
+;      push bx
+;      push cx
+;      push dx
+;      push di
 
      mov al, 0b6H
      out 43h, al    ;初始化8253，用于产生频率所需方波
@@ -227,6 +236,9 @@ gensound proc near
      mov ah, al
      or al, 3       ;将PB0,PB1两位置1，发声音
      out 61h, al
+
+        
+     
      
 wait1:
      mov cx, 3314
@@ -238,11 +250,19 @@ delay1:
      mov al, ah
      out 61h, al
 
+push ax
+     push bx
+     push cx
+     push dx
+     push di
+     call wujiaoxin
+back1:
      pop di
      pop dx
      pop cx
      pop bx
      pop ax
+     popf
      ret 
 gensound endp
 
@@ -267,9 +287,10 @@ freg:
       cmp di, 0FFFFH
       je end_mus
       mov bx, ds:[bp]
-      call gensound
       add si, 2
       add bp, 2
+      call gensound
+      
       jmp freg
 end_mus:
       ret

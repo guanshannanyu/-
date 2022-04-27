@@ -235,6 +235,7 @@ gensound proc near
      or al, 3       ;将PB0,PB1两位置1，发声音
      out 61h, al
 
+        
      push ax
      push bx
      push cx
@@ -247,6 +248,7 @@ back1:
      pop cx
      pop bx
      pop ax
+     popf
      
 wait1:
      mov cx, 3314
@@ -287,9 +289,10 @@ freg:
       cmp di, 0FFFFH
       je end_mus
       mov bx, ds:[bp]
-      call gensound
       add si, 2
       add bp, 2
+      call gensound
+      
       jmp freg
 end_mus:
       ret
