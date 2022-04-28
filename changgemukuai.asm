@@ -74,7 +74,7 @@ gensound proc near
         push cx
         push dx
         push di
-        ;call zhongduan
+        call zhongduan
         call wujiaoxin
         ; popf
         ; pop es
