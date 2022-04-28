@@ -303,7 +303,10 @@ freg:
       
       jmp freg
 end_mus:
-      jmp start
+        address mus_freg, mus_time
+        mov ax, datanew
+        mov ds, ax         
+        call music
 music endp
 
 code ends
