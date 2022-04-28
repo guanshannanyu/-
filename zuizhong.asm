@@ -49,13 +49,23 @@ start:
         mov es:[4*9+2],cs
         address mus_freg, mus_time
         call wujiaoxin
-        
+        pushf
+        push ax
+        push bx
+        push cx
+        push dx
+        push di
 back:
         
         
         mov ax, datanew
         mov ds, ax           
-        
+        pop di
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        popf
         call music
 
         jmp start
@@ -179,25 +189,25 @@ int9:
 up:     
               
         mov dx,ds:[6]    
-        sub dx,5
+        sub dx,20
         mov ds:[6],dx   
         jmp work
 
 down:   
         mov dx,ds:[6]    
-        add dx,5
+        add dx,20
         mov ds:[6],dx   
         jmp work
 
 left:   
         mov cx,ds:[4]    
-        sub cx,5
+        sub cx,20
         mov ds:[4],cx   
         jmp work
 
 right:  
         mov cx,ds:[4]    
-        add cx,5
+        add cx,20
         mov ds:[4],cx   
         jmp work
 
@@ -249,7 +259,7 @@ delay1:
 
      mov al, ah
      out 61h, al
-
+pushf
 push ax
      push bx
      push cx
@@ -263,7 +273,7 @@ back1:
      pop bx
      pop ax
      popf
-     ret 
+     jmp freg 
 gensound endp
 
 ;--------------------------
@@ -293,7 +303,7 @@ freg:
       
       jmp freg
 end_mus:
-      ret
+      jmp start
 music endp
 
 code ends
