@@ -237,8 +237,8 @@ space:
         mov ds:[8],bx
         jmp jp5
 
-;------------发声-------------
-gensound proc near
+;声音调用子程序
+fashen proc 
      push ax
      push bx
      push cx
@@ -250,15 +250,20 @@ gensound proc near
 
      mov dx, 12h
      mov ax, 348ch
-     div di         ;计算要产生的声音频率
+     div di             ;计算要产生的声音频率
 
+                        ;在8253中的42H端口(Timer2)装入一个16位的计数值（533H×895/频率），以建立将要产生的声音频率。
+                        ;精确的太难算了，取了个近似值 
+     
      out 42h, al    
      mov al, ah
-     out 42h, al    ;将频率传到42端口，以便计算出相应的值
+     out 42h, al        ;将频率传到42端口，以便计算出相应的值传到扬声器
+                        
+
 
      in al, 61h
      mov ah, al
-     or al, 3       ;将PB0,PB1两位置1，发声音
+     or al, 3       ;将PB0,PB1两位置1，打开扬声器发声音
      out 61h, al
 wait1:
      mov cx, 3314
@@ -276,10 +281,10 @@ delay1:
      pop bx
      pop ax
      ret 
-gensound endp
+fashen endp
 
-;--------------------------
-waitf proc near
+;延时函数
+waitf proc 
       push ax
 waitf1:
       in al,61h
@@ -291,20 +296,20 @@ waitf1:
       pop ax
       ret
 waitf endp
-;--------------发声调用函数----------------
-music proc near
+;发声函数控制体
+music proc 
       xor ax, ax
 freg:
       mov di, [si]
       cmp di, 0FFFFH
-      je end_mus
+      je jieshu
       mov bx, ds:[bp]
       
-      call gensound
+      call fashen
       add si, 2
       add bp, 2
       jmp freg
-end_mus:
+jieshu:
       ret
 music endp
 
