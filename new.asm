@@ -17,6 +17,27 @@ dw 0
         mus_time  dw 6 dup (25),50                   ;节拍表
                 dw 2 dup (25,25,50)
                 dw 12 dup (25),100
+
+        mus_1 dw 392,330,392,330
+		 dw 392,330,262
+		 dw 294,349,330,294
+		 dw 392
+		 dw 392,330,392,330
+		 dw 392,330,262
+		 dw 294,349,330,294
+		 dw 262
+		 dw 294,294,349,349
+		 dw 330,262,392
+		 dw 294,349,330,294
+		 dw 392
+		 dw 392,330,392,330
+		 dw 392,330,262
+		 dw 294,349,330,294
+		 dw 262
+		 dw -1
+
+        time1 dw 3 dup(10h,10h,10h,10h,10h,10h,20h,10h,10h,10h,10h,40h)
+		 dw 10h,10h,10h,10h,10h,10h,20h,10h,10h,10h,10h,20h
 data ends
 
 ;----------音乐地址宏-----------
@@ -24,6 +45,8 @@ ADDRESS MACRO A,B
      LEA SI,A
      LEA BP,DS:B
 ENDM
+
+
 
 stack segment
 db 128 dup (0)
@@ -45,23 +68,16 @@ start:
         
 
 try:    
-        ; address mus_freg, mus_time
-        ; push es:[4*9]
-        ; pop ds:[0]
-        ; push es:[4*9+2]
-        ; pop ds:[2]      ;备份原来int 9,好像用不到，不改了
-
-        ; mov word ptr es:[9*4],offset zhongduan
-        ; mov es:[4*9+2],cs
+        
 
         call wujiaoxin
 
 work1:
-        address mus_freg, mus_time
+        address mus_1, time1
         push es:[4*9]
         pop ds:[0]
         push es:[4*9+2]
-        pop ds:[2]      ;备份原来int 9,好像用不到，不改了
+        pop ds:[2]      ;备份原来int 9
 
         mov word ptr es:[9*4],offset zhongduan
         mov es:[4*9+2],cs
@@ -240,6 +256,8 @@ jp9:
         push bx
         mov bx,ds:[20]
         cmp bx,2
+        je chonghua
+        cmp bx,1
         je chonghua
         pop bx
         call wujiaoxin
