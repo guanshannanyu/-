@@ -3,7 +3,13 @@ assume cs:code
 data segment
 dw 0,0
 dw 200,200
-db 0001b
+dw 0001b
+dw 200
+dw 150
+dw 50
+dw 50
+dw 150
+dw 0
         mus_freg  dw 330,294,262,294,3 dup (330)     ;频率表
                 dw 3 dup (294),330,392,392
                 dw 330,294,262,294,4 dup (330)
@@ -57,10 +63,16 @@ try:
         push ds:[2]
         pop es:[9*4+2]  ;回复原本的int 9中断，否则会无法调用第二，总之会发生莫名奇妙的错误
 
+        mov cx,ds:[20]
+        cmp cx,1
+        je endl
+
 
         jmp try
+endl:
         mov ax,4c00H
         int 21H
+
 
 
 wujiaoxin proc
@@ -76,7 +88,7 @@ wujiaoxin proc
 work:   mov al,12h      ;640*480 256的图形模式:  
         mov ah,0        ;是用来设定显示模式的服务程序
         mov cx,ds:[4]
-        mov bx,200
+        mov bx,ds:[10]
         mov dx,ds:[6]
         int 10h
 huitu:
@@ -89,7 +101,7 @@ huitu:
         jne huitu
         
 step2:
-        mov bx,145
+        mov bx,ds:[12]
 huitu2:
         mov al,ds:[8] 
         mov ah,0ch
@@ -102,7 +114,7 @@ huitu2:
         jne huitu2
 
 step3:
-        mov bx,50
+        mov bx,ds:[14]
 huitu3:
         mov al,ds:[8] 
         mov ah,0ch
@@ -118,7 +130,7 @@ huitu3:
         jne huitu3
 
 step4:
-        mov bx,50
+        mov bx,ds:[16]
 huitu4:
         mov al,ds:[8] 
         mov ah,0ch
@@ -134,7 +146,7 @@ huitu4:
         jne huitu4
 
 step5:
-        mov bx,145
+        mov bx,ds:[18]
 huitu5:
         mov al,ds:[8] 
         mov ah,0ch
@@ -191,6 +203,10 @@ jp4:
         cmp al,39h
         jz space
 jp5:
+
+        cmp al,01h
+        jz  escfuben
+jp6:
         pop es
         pop bx
         pop ax
@@ -237,6 +253,10 @@ space:
         inc bx
         mov ds:[8],bx
         jmp jp5
+
+escfuben:
+        mov ds:[20],1
+        jmp jp6
 
 ;声音调用子程序
 fashen proc 
@@ -306,6 +326,10 @@ freg:
       je jieshu
       mov bx, ds:[bp]
       
+      mov cx,ds:[20]
+      cmp cx,1
+      je jieshu
+
       call fashen
       add si, 2
       add bp, 2
