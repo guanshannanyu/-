@@ -4,11 +4,11 @@ data segment
 dw 0,0
 dw 200,200
 dw 0001b
-dw 200
-dw 150
-dw 50
-dw 50
-dw 150
+dw 40
+dw 30
+dw 10
+dw 10
+dw 30
 dw 0
         mus_freg  dw 330,294,262,294,3 dup (330)     ;频率表
                 dw 3 dup (294),330,392,392
@@ -45,6 +45,18 @@ start:
         
 
 try:    
+        ; address mus_freg, mus_time
+        ; push es:[4*9]
+        ; pop ds:[0]
+        ; push es:[4*9+2]
+        ; pop ds:[2]      ;备份原来int 9,好像用不到，不改了
+
+        ; mov word ptr es:[9*4],offset zhongduan
+        ; mov es:[4*9+2],cs
+
+        call wujiaoxin
+
+work1:
         address mus_freg, mus_time
         push es:[4*9]
         pop ds:[0]
@@ -54,8 +66,6 @@ try:
         mov word ptr es:[9*4],offset zhongduan
         mov es:[4*9+2],cs
 
-        call wujiaoxin
-        
         call music
 
         push ds:[0]
@@ -68,7 +78,7 @@ try:
         je endl
 
 
-        jmp try
+        jmp work1
 endl:
         mov ax,4c00H
         int 21H
@@ -207,6 +217,18 @@ jp5:
         cmp al,01h
         jz  escfuben
 jp6:
+        cmp al,12h
+        jz  enlarge1
+
+jp7:
+        cmp al,2eh
+        jz  reduce
+
+jp8:
+        cmp al,32h
+        jz  qingping
+
+jp9:
         pop es
         pop bx
         pop ax
@@ -214,11 +236,20 @@ jp6:
         pop cx
         pop di
         pop si
+        
+        push bx
+        mov bx,ds:[20]
+        cmp bx,2
+        je chonghua
+        pop bx
         call wujiaoxin
+
         iret
         
-
-
+chonghua:
+        
+        pop bx
+        iret
         
 
 up:  
@@ -257,6 +288,60 @@ space:
 escfuben:
         mov ds:[20],1
         jmp jp6
+
+enlarge1:
+
+        mov bx,ds:[10]
+        add bx,4
+        mov ds:[10],bx
+
+        mov bx,ds:[12]
+        add bx,3
+        mov ds:[12],bx
+
+        mov bx,ds:[14]
+        add bx,1
+        mov ds:[14],bx
+
+        mov bx,ds:[16]
+        add bx,1
+        mov ds:[16],bx
+
+        mov bx,ds:[18]
+        add bx,3
+        mov ds:[18],bx
+
+        jmp jp7
+
+reduce:
+        mov bx,ds:[10]
+        sub bx,4
+        mov ds:[10],bx
+
+        mov bx,ds:[12]
+        sub bx,3
+        mov ds:[12],bx
+
+        mov bx,ds:[14]
+        sub bx,1
+        mov ds:[14],bx
+
+        mov bx,ds:[16]
+        sub bx,1
+        mov ds:[16],bx
+
+        mov bx,ds:[18]
+        sub bx,3
+        mov ds:[18],bx
+
+        jmp jp8
+
+qingping:
+        mov ax,12h
+        int 10h
+        
+        mov ds:[20],2
+        jmp jp9
 
 ;声音调用子程序
 fashen proc 
