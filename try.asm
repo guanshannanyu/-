@@ -3,8 +3,22 @@ assume cs:code
 data segment
 dw 0,0
 dw 200,200
-db 0001b
-        mus_freg  dw 392,330,392,330
+dw 0001b
+dw 40
+dw 30
+dw 10
+dw 10
+dw 30
+dw 0
+        mus_freg  dw 330,294,262,294,3 dup (330)     ;频率表
+                dw 3 dup (294),330,392,392
+                dw 330,294,262,294,4 dup (330)
+                dw 294,294,330,294,262,-1
+        mus_time  dw 6 dup (25),50                   ;节拍表
+                dw 2 dup (25,25,50)
+                dw 12 dup (25),100
+
+        mus_1 dw 392,330,392,330
 		 dw 392,330,262
 		 dw 294,349,330,294
 		 dw 392
@@ -22,7 +36,7 @@ db 0001b
 		 dw 262
 		 dw -1
 
-        mus_time  dw 3 dup(10h,10h,10h,10h,10h,10h,20h,10h,10h,10h,10h,40h)
+        time1 dw 3 dup(10h,10h,10h,10h,10h,10h,20h,10h,10h,10h,10h,40h)
 		 dw 10h,10h,10h,10h,10h,10h,20h,10h,10h,10h,10h,20h
 data ends
 
@@ -31,6 +45,8 @@ ADDRESS MACRO A,B
      LEA SI,A
      LEA BP,DS:B
 ENDM
+
+
 
 stack segment
 db 128 dup (0)
@@ -52,17 +68,20 @@ start:
         
 
 try:    
-        address mus_freg, mus_time
+        
+
+        call wujiaoxin
+
+work1:
+        address mus_1, time1
         push es:[4*9]
         pop ds:[0]
         push es:[4*9+2]
-        pop ds:[2]      ;备份原来int 9,好像用不到，不改了
+        pop ds:[2]      ;备份原来int 9
 
         mov word ptr es:[9*4],offset zhongduan
         mov es:[4*9+2],cs
 
-        call wujiaoxin
-        
         call music
 
         push ds:[0]
@@ -70,10 +89,16 @@ try:
         push ds:[2]
         pop es:[9*4+2]  ;回复原本的int 9中断，否则会无法调用第二，总之会发生莫名奇妙的错误
 
+        mov cx,ds:[20]
+        cmp cx,1
+        je endl
 
-        jmp try
+
+        jmp work1
+endl:
         mov ax,4c00H
         int 21H
+
 
 
 wujiaoxin proc
@@ -89,7 +114,7 @@ wujiaoxin proc
 work:   mov al,12h      ;640*480 256的图形模式:  
         mov ah,0        ;是用来设定显示模式的服务程序
         mov cx,ds:[4]
-        mov bx,200
+        mov bx,ds:[10]
         mov dx,ds:[6]
         int 10h
 huitu:
@@ -102,7 +127,7 @@ huitu:
         jne huitu
         
 step2:
-        mov bx,145
+        mov bx,ds:[12]
 huitu2:
         mov al,ds:[8] 
         mov ah,0ch
@@ -115,7 +140,7 @@ huitu2:
         jne huitu2
 
 step3:
-        mov bx,50
+        mov bx,ds:[14]
 huitu3:
         mov al,ds:[8] 
         mov ah,0ch
@@ -131,7 +156,7 @@ huitu3:
         jne huitu3
 
 step4:
-        mov bx,50
+        mov bx,ds:[16]
 huitu4:
         mov al,ds:[8] 
         mov ah,0ch
@@ -147,7 +172,7 @@ huitu4:
         jne huitu4
 
 step5:
-        mov bx,145
+        mov bx,ds:[18]
 huitu5:
         mov al,ds:[8] 
         mov ah,0ch
@@ -204,6 +229,22 @@ jp4:
         cmp al,39h
         jz space
 jp5:
+
+        cmp al,01h
+        jz  escfuben
+jp6:
+        cmp al,12h
+        jz  enlarge1
+
+jp7:
+        cmp al,2eh
+        jz  reduce
+
+jp8:
+        cmp al,32h
+        jz  qingping
+
+jp9:
         pop es
         pop bx
         pop ax
@@ -211,11 +252,22 @@ jp5:
         pop cx
         pop di
         pop si
+        
+        push bx
+        mov bx,ds:[20]
+        cmp bx,2
+        je chonghua
+        cmp bx,1
+        je chonghua
+        pop bx
         call wujiaoxin
+
         iret
         
-
-
+chonghua:
+        
+        pop bx
+        iret
         
 
 up:  
@@ -250,6 +302,64 @@ space:
         inc bx
         mov ds:[8],bx
         jmp jp5
+
+escfuben:
+        mov ds:[20],1
+        jmp jp6
+
+enlarge1:
+
+        mov bx,ds:[10]
+        add bx,4
+        mov ds:[10],bx
+
+        mov bx,ds:[12]
+        add bx,3
+        mov ds:[12],bx
+
+        mov bx,ds:[14]
+        add bx,1
+        mov ds:[14],bx
+
+        mov bx,ds:[16]
+        add bx,1
+        mov ds:[16],bx
+
+        mov bx,ds:[18]
+        add bx,3
+        mov ds:[18],bx
+
+        jmp jp7
+
+reduce:
+        mov bx,ds:[10]
+        sub bx,4
+        mov ds:[10],bx
+
+        mov bx,ds:[12]
+        sub bx,3
+        mov ds:[12],bx
+
+        mov bx,ds:[14]
+        sub bx,1
+        mov ds:[14],bx
+
+        mov bx,ds:[16]
+        sub bx,1
+        mov ds:[16],bx
+
+        mov bx,ds:[18]
+        sub bx,3
+        mov ds:[18],bx
+
+        jmp jp8
+
+qingping:
+        mov ax,12h
+        int 10h
+        
+        mov ds:[20],2
+        jmp jp9
 
 ;声音调用子程序
 fashen proc 
@@ -319,6 +429,10 @@ freg:
       je jieshu
       mov bx, ds:[bp]
       
+      mov cx,ds:[20]
+      cmp cx,1
+      je jieshu
+
       call fashen
       add si, 2
       add bp, 2
@@ -329,3 +443,5 @@ music endp
 
 code ends
 end start
+
+;老师说要有用户交互和填充，建议一层一层向里面画
